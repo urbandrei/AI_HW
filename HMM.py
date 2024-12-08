@@ -1,32 +1,21 @@
 import random
 
 def hiddenmarkovmodel(initial, transition, signals, pattern):
-    if len(pattern) == 0:
-        return []
-    
-    maxi = [0,[]]
-    for i in range(len(initial)):
-        if len(pattern) != 1:
-            rec = recursivestep(transition,signals,pattern,i,1)
-        prob = initial[i]*signals[i][pattern[0]]*rec[0]
-        if maxi[0] < prob:
-            maxi[0] = prob
-            maxi[1] = [i]+rec[1]
+    pos = [[[],1]]
+    for i in range(len(pattern)):
+        newpos = []
+        for j in range(len(pos)):
+            for k in range(len(initial)):
+                prob = 1
+                if i == 0:
+                    prob = initial[k]*signals[k][pattern[i]]
+                else:
+                    prob = transition[pos[j][0][-1]][k]*signals[k][pattern[i]]
+                if pos[j][1]*prob != 0:
+                    newpos.append([pos[j][0]+[k],pos[j][1]*prob])
+        pos = newpos
+    return pos
 
-    return maxi
-    
-
-def recursivestep(transition,signals,pattern,prev,depth):
-    maxi = [0,[]]
-    for i in range(len(transition)):
-        rec = [1,[]]
-        if depth != len(pattern)-1:
-           rec = recursivestep(transition,signals,pattern,i,depth+1)
-        prob = transition[prev][i]*signals[i][pattern[depth]]*rec[0]
-        if maxi[0] < prob:
-            maxi[0] = prob
-            maxi[1] = [i]+rec[1]
-    return maxi
 
 states = -1
 initial = []
@@ -54,7 +43,7 @@ elif option == "d":
             print("not valid")
     while len(initial) < states:
         try:
-            initial.append(float(input("enter the initial probability of state ",(i+1),": ")))
+            initial.append(float(input(f"enter the initial probability of state {(len(initial)+1)}: ")))
         except:
             print("not valid")
 else:
@@ -107,9 +96,9 @@ if option == "f":
     with open(file_name, 'r') as f:
         for line in f:
             words = line.split(',')
-            transition.append([])
+            signal.append([])
             for i in words:
-                transition[-1].append(float(i))
+                signal[-1].append(float(i))
 elif option == "d":
     sigs = -1
     while sigs < 1:
@@ -122,7 +111,7 @@ elif option == "d":
         signal.append([])
         while len(signal[i]) < sigs:
             try:
-                signal[i].append(float(input(f"enter probability from state {(i+1)} to signal {(len(transition[i])+1)}: ")))
+                signal[i].append(float(input(f"enter probability from state {(i+1)} to signal {(len(signal[i])+1)}: ")))
             except:
                 print("not valid")
 else:
@@ -154,8 +143,15 @@ while len(pattern) == 0:
 option = ""
 while option != "q":
     res = hiddenmarkovmodel(initial,transition,signal,pattern)
-    print("Most probable path: ", res[1])
-    print("Probability: ",res[0])
+    mini = [res[0][0],res[0][1]]
+    for i in res:
+        if mini[1] > i[1]:
+            mini[1] = i[1]
+            mini[0] = i[0]
+    
+    print(res)
+    print("Most probable path: ", mini[0])
+    print("Probability: ",mini[1])
     option = input("would you like to change initial (i), transition (t), signal (s), pattern(p), or quit(q)")
     if option == "i":
         val = int(input("which state would you like to change: "))

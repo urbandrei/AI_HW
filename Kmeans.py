@@ -1,6 +1,9 @@
 import random
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 
-def kmeans(data, bound, seeds, iterations):
+
+def kmeans(data, bound, seeds, iterations,reseed):
     centroids = []
     for i in range(seeds):
         centroids.append([0,0])
@@ -20,6 +23,26 @@ def kmeans(data, bound, seeds, iterations):
                     amount += 1
             centroids[j][0] = total_x/amount
             centroids[j][1] = total_y/amount
+        overlap = False
+        iter = 0
+        while not overlap and iter < reseed:
+            overlap = True
+            j=0
+            while j < len(centroids):
+                k = len(centroids)-1
+                while k > j:
+                    if ((centroids[j][0]-centroids[k][0])**2+(centroids[j][1]-centroids[k][1])**2)**.5 < 2*bound:
+                        if i == iterations-1:
+                            centroids.pop(k)
+                        else:
+                            rand = int(random.random()*len(data))
+                            centroids[k][0] = data[rand][0]
+                            centroids[k][1] = data[rand][1]
+                        overlap = False
+                    k -= 1
+                j += 1
+            iter += 1
+
         print("ITERATION ",i+1)
         for i in centroids:
             cluster = []
@@ -27,6 +50,38 @@ def kmeans(data, bound, seeds, iterations):
                 if ((j[0]-i[0])**2+(j[1]-i[1])**2)**.5 < bound:
                     cluster.append([j[0],j[1]])
             print(f"Cluster ({i[0]},{i[1]}): {cluster}")
+    print("ITERATION DONE")
+    col = 0
+    xs = []
+    ys = []
+    cs = []
+    for i in centroids:
+        cluster = []
+        for j in reversed(range(len(data))):
+            if ((data[j][0]-i[0])**2+(data[j][1]-i[1])**2)**.5 < bound:
+                cluster.append([data[j][0],data[j][1]])
+                xs.append(data[j][0])
+                ys.append(data[j][1])
+                cs.append(col)
+                data.pop(j)
+        col += 1/len(centroids)
+
+    for i in data:
+        xs.append(i[0])
+        ys.append(i[1])
+        cs.append(1)
+
+    
+    print(f"Cluster ({i[0]},{i[1]}): {cluster}")
+    print(f"Outliers: {data}")
+    fig, ax = plt.subplots(1)
+    ax.plot(xs,ys, "ro")
+    
+    ax.set_aspect("equal")
+    for i in centroids:
+        circ = Circle((i[0],i[1]),bound,fill=False)
+        ax.add_artist(circ)
+    plt.savefig("out.png")
 
 data = []
 option = ""
@@ -63,5 +118,6 @@ print("data points: ",data)
 bounds = float(input("what is the radius of the clusters: "))
 seeds = int(input("how many seed points: "))
 iterations = int(input("how many iterations: "))
+rese = int(input("how many times should I reseed: "))
 
-kmeans(data,bounds,seeds,iterations)
+kmeans(data,bounds,seeds,iterations,rese)

@@ -27,7 +27,9 @@ def linreg(data, inp):
 
     print("Slope:",a)
     print("Intercept:",b)
-    print("Prediction:",a*inp+b)
+    print(type(a))
+    print(type(inp))
+    print(f"Prediction:{(float(a)*float(inp)+b)}")
 
 data = []
 option = ""
@@ -53,4 +55,4 @@ x = input("enter independent variable: ")
 
 
 
-linreg(data,2)
+linreg(data,x)
